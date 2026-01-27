@@ -11,10 +11,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final List<Map<String, String>> _movieList = [
-    {'name': 'john wick', 'type': 'Action', 'ratings': '8.5'},
-  ];
-
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _typeController = TextEditingController();
   final TextEditingController _ratingsController = TextEditingController();
@@ -85,7 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     return DataRow(
                       onSelectChanged: (bool? selected) {
                         if (selected != null && selected) {
-                          _editFields(data);
+                          _editFields(doc.id, data);
                         }
                       },
                       cells: [
@@ -95,15 +91,17 @@ class _MyHomePageState extends State<MyHomePage> {
                         DataCell(
                           IconButton(
                             icon: Icon(Icons.delete, color: Colors.red),
-                            onPressed: () {
-                              setState(() {
-                                _movieList.remove(data);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('${data['name']} Deleted'),
-                                  ),
-                                );
-                              });
+                            onPressed: () async {
+                              await FirebaseFirestore.instance
+                                  .collection('movies')
+                                  .doc(doc.id)
+                                  .delete();
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('${data['name']} Deleted'),
+                                ),
+                              );
                             },
                           ),
                         ),
@@ -201,7 +199,9 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void _editFields(Map<String, dynamic> movie) {
+  //movie edit option
+
+  void _editFields(String docId, Map<String, dynamic> movie) {
     _nameController.text = movie['name'] ?? '';
     _typeController.text = movie['type'] ?? '';
     _ratingsController.text = movie['ratings'] ?? '';
@@ -238,7 +238,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 double? enteredRating = double.tryParse(
                   _ratingsController.text,
                 );
@@ -247,11 +247,15 @@ class _MyHomePageState extends State<MyHomePage> {
                   if (enteredRating != null &&
                       enteredRating >= 0 &&
                       enteredRating <= 10) {
-                    setState(() {
-                      movie['name'] = _nameController.text;
-                      movie['type'] = _typeController.text;
-                      movie['ratings'] = _ratingsController.text;
-                    });
+                    await FirebaseFirestore.instance
+                        .collection('movies')
+                        .doc(docId)
+                        .update({
+                          'name': _nameController.text,
+                          'type': _typeController.text,
+                          'ratings': _ratingsController.text,
+                        });
+
                     Navigator.pop(context);
                   }
                 }
