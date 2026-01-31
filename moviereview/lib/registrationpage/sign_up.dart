@@ -1,4 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:moviereview/firebase/authentication_firebase.dart';
+import 'package:moviereview/main_page.dart';
+import 'package:moviereview/registrationpage/sign_in.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -8,6 +12,8 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  final AuthenticationFirebase _authenticationFirebase =
+      AuthenticationFirebase();
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -68,12 +74,48 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
               ),
 
-              onPressed: () {},
+              onPressed: () async {
+                final fullName = _fullNameController.text.trim();
+                final email = _emailController.text.trim();
+                final password = _passwordController.text.trim();
+
+                if (fullName.isNotEmpty &&
+                    email.isNotEmpty &&
+                    password.isNotEmpty) {
+                  User? user = await _authenticationFirebase.signUp(
+                    fullName,
+                    email,
+                    password,
+                  );
+                  if (user != null) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => MyHomePage()),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Sign Up error, plz check your connection or email',
+                        ),
+                      ),
+                    );
+                  }
+                }
+              },
               child: Text('Sign UP', style: TextStyle(color: Colors.white)),
             ),
 
             SizedBox(height: 20),
-            Text('Already have account? Sign in'),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SignInPage()),
+                );
+              },
+              child: Text('Already have account? Sign in'),
+            ),
           ],
         ),
       ),

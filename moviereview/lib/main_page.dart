@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:moviereview/firebasefiles/crud.dart';
+import 'package:moviereview/firebase/authentication_firebase.dart';
+import 'package:moviereview/firebase/crud.dart';
+import 'package:moviereview/registrationpage/sign_in.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -19,7 +21,26 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Movie Review')),
+      appBar: AppBar(
+        title: Text('Movie Review'),
+        actions: [
+          IconButton(
+            onPressed: () async {
+              final AuthenticationFirebase authenticationFirebase =
+                  AuthenticationFirebase();
+              await authenticationFirebase.signOut();
+
+              if (context.mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => SignInPage()),
+                );
+              }
+            },
+            icon: Icon(Icons.logout),
+          ),
+        ],
+      ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('movies').snapshots(),
         builder: (context, snapshot) {
